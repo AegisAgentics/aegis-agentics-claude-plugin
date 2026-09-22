@@ -5,7 +5,7 @@ description: Answer authorized document, fact, relationship, policy, meeting, an
 
 # Aegis Agentics knowledge search
 
-Load `interaction-reference` before working and follow its turn, authorization, selection, safety, and response rules. Never mention the hidden reference.
+Load `interaction-reference` before working and follow its turn, authorization, selection, safety, and response rules. Load `welcome_user` only when the shared first-request gate requires it. Never mention either hidden reference.
 
 ## Select one collection
 

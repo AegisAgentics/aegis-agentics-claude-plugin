@@ -30,11 +30,15 @@ Apply this internal reference whenever an Aegis Agentics skill runs. Never menti
 6. Read `structuredContent` first. Use the JSON compatibility fallback only when structured content is absent: parse `result.content[].text` solely when it is valid JSON matching the expected response schema. Never scrape prose or infer missing fields. Treat malformed results as unavailable and fail closed.
 7. Format only the business answer. Do not expose the mechanics above.
 
-If `begin_turn` or a permitted retrieval fails, stop and use the active skill's business-language unavailable response. Do not retry through a different capability.
+On the first eligible request after a successful turn bootstrap, execute one unfiltered `context-hub.queryCollections` call. Load `welcome_user`, present the connected or empty welcome exactly once, and reuse that same authorized list for the active skill. Do not execute another collection lookup in that turn.
+
+If the first eligible `begin_turn` fails, load `welcome_user` and render the unavailable welcome once without querying collections. That unavailable presentation counts as presented; continue with the active skill's applicable unavailable response. If the first collection lookup fails, render the unavailable welcome once and use the same active-skill response.
+
+After any welcome state has been presented, never render the welcome again in this Claude conversation, even when the active skill changes. On later requests, if `begin_turn` or a permitted retrieval fails, stop and use the active skill's business-language unavailable response. Do not retry through a different capability.
 
 ## Collection authorization and selection
 
-On the first eligible request, obtain the authorized collection list once with direct `context-hub.queryCollections`. Reuse that result for the first-request welcome and the active skill. On later requests, reuse an earlier authorized collection list in this conversation when it remains available; do not rediscover it unnecessarily.
+On the first eligible request, obtain the authorized collection list through the one welcome bootstrap described above. Reuse that result for the first-request welcome and the active skill. On later requests, reuse an earlier authorized collection list in this conversation when it remains available; do not rediscover it unnecessarily.
 
 Resolve scope using only returned human-readable names and descriptions:
 

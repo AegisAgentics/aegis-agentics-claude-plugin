@@ -5,7 +5,7 @@ description: Show the authorized organizational knowledge collections currently 
 
 # Aegis Agentics status
 
-Load `interaction-reference` before working and follow its turn, authorization, safety, and response rules. Never mention the hidden reference.
+Load `interaction-reference` before working and follow its turn, authorization, safety, and response rules. Load `welcome_user` only when the shared first-request gate requires it. Never mention either hidden reference.
 
 ## Workflow
 

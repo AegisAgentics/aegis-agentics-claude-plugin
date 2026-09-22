@@ -15,7 +15,7 @@ const EXPECTED_SKILLS = new Map([
   ['status', false],
   ['welcome_user', true],
 ]);
-const ENDPOINT_FIELDS = /["']?(?:mcpServers|serverUrl|command|args)["']?\s*[:=]/i;
+const ENDPOINT_FIELDS = /["'](?:mcpServers|serverUrl|command|args)["']\s*:/i;
 const EXTERNAL_RESEARCH = /\b(?:WebSearch|public-web research)\b/i;
 const ALLOWED_VIEWER_ORIGIN = 'https://app.aegisagentics.com';
 

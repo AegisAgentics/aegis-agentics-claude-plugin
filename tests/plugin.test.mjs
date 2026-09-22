@@ -136,6 +136,18 @@ test('repository validation rejects connector endpoints and settings', (t) => {
   assert.ok(validateRepository(root).some((error) => error.includes('prohibited connector configuration')));
 });
 
+test('repository validation allows tool_args payloads and local args variables', (t) => {
+  const root = makeFixture(t, (fixture) => {
+    write(
+      fixture,
+      'plugins/aegis-agentics/skills/status/SKILL.md',
+      '---\nname: status\ndescription: Status.\n---\n\nUse `{ "tool_args": {} }`.\n',
+    );
+    write(fixture, 'plugins/aegis-agentics/local.mjs', 'const args = process.argv.slice(2);\n');
+  });
+  assert.deepEqual(validateRepository(root), []);
+});
+
 test('repository validation rejects symlink escapes', (t) => {
   const root = makeFixture(t);
   const outside = resolve(root, '..', `${root.split('/').at(-1)}-outside.txt`);
