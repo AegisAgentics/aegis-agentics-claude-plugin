@@ -72,3 +72,53 @@ test('status reports only human-readable collection metadata', () => {
   assert.match(text, /never include raw IDs, session data, turn tokens, trace data, or raw JSON/i);
   assert.match(text, /do not infer readiness, coverage, sync time, or user totals/i);
 });
+
+test('knowledge search routes content, facts, and mixed questions', () => {
+  const text = skill('knowledge-search');
+  assert.match(text, /source passages.*`context-hub\.queryContent`/is);
+  assert.match(text, /relationships.*`context-hub\.queryFacts`/is);
+  assert.match(text, /needs both.*execute both/is);
+  assert.match(text, /run them in parallel/i);
+});
+
+test('knowledge gateway shapes keep collection scope inside tool arguments', () => {
+  const text = skill('knowledge-search');
+  assert.match(text, /"tool_name": "queryContent"[\s\S]*"tool_args": \{ "query": "<complete user request>", "collectionId": "<selected collection ID>" \}[\s\S]*"session_id": "<current session ID>"[\s\S]*"turnToken": "<current turn token>"/);
+  assert.match(text, /"tool_name": "queryFacts"[\s\S]*"tool_args": \{ "query": "<concise fact-focused query>", "collectionId": "<selected collection ID>" \}[\s\S]*"session_id": "<current session ID>"[\s\S]*"turnToken": "<current turn token>"/);
+  assert.match(text, /never place `session_id` or `turnToken` inside `tool_args`/i);
+});
+
+test('knowledge grounding preserves names and temporal meaning without gap filling', () => {
+  const text = skill('knowledge-search');
+  assert.match(text, /preserve proper names exactly as returned/i);
+  assert.match(text, /preserve temporal language/i);
+  assert.match(text, /do not fill gaps with model knowledge/i);
+  assert.match(text, /do not use external internet research/i);
+  assert.match(text, /ambiguous entity.*ask one concise disambiguation question/is);
+});
+
+test('knowledge grounding handles quotations, staleness, conflicts, and inference', () => {
+  const text = skill('knowledge-search');
+  assert.match(text, /exact quotation.*preserve the returned wording/is);
+  assert.match(text, /stale.*state the evidence date limitation/is);
+  assert.match(text, /conflict.*present the conflict.*citations/is);
+  assert.match(text, /label.*inference/i);
+});
+
+test('citation contract preserves exact returned destinations', () => {
+  const text = skill('knowledge-search');
+  assert.match(text, /assign citation numbers in order of first use/i);
+  assert.match(text, /reuse the same number for an exact repeated reference/i);
+  assert.match(text, /different numbers for distinct locators/i);
+  assert.match(text, /copy `viewerUrl` exactly, character for character/i);
+  assert.match(text, /do not construct a viewer path from IDs/i);
+  assert.match(text, /prefix that unchanged path once with `https:\/\/app\.aegisagentics\.com`/i);
+  assert.match(text, /human-readable label without inventing a link/i);
+});
+
+test('knowledge no-evidence responses stay narrow and do not prompt generically', () => {
+  const text = skill('knowledge-search');
+  assert.match(text, /Supporting information was not found in the authorized knowledge available to you\./);
+  assert.match(text, /No matching authorized relationship or fact data is available\./);
+  assert.match(text, /do not add a generic follow-up prompt/i);
+});
