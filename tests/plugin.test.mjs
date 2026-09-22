@@ -241,6 +241,12 @@ test('installed plugin contains exactly two visible and two hidden skills', () =
   });
 });
 
+test('public package excludes internal superpowers planning artifacts', () => {
+  const internalPlanningFiles = walkFiles(repositoryRoot)
+    .filter((file) => file.startsWith('docs/superpowers/'));
+  assert.deepEqual(internalPlanningFiles, []);
+});
+
 test('documentation describes capability, authorization, and local lifecycle', () => {
   const rootReadme = readFileSync(resolve(repositoryRoot, 'README.md'), 'utf8');
   const pluginReadme = readFileSync(resolve(pluginRoot, 'README.md'), 'utf8');
