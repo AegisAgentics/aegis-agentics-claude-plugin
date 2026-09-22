@@ -4,14 +4,17 @@ import { pathToFileURL } from 'node:url';
 const template = readFileSync(new URL('../assets/welcome-template.html', import.meta.url), 'utf8');
 const states = new Set(['connected', 'empty', 'unavailable']);
 
-const escapeHtml = (value) => String(value)
+const neutralizeUnicodeControls = (value) => String(value).replace(
+  /[\u0000-\u001f\u007f-\u009f\u202a-\u202e\u2066-\u2069]/gu,
+  (character) => `⟪U+${character.codePointAt(0).toString(16).toUpperCase().padStart(4, '0')}⟫`,
+);
+
+const escapeHtml = (value) => neutralizeUnicodeControls(value)
   .replaceAll('&', '&amp;')
   .replaceAll('<', '&lt;')
   .replaceAll('>', '&gt;')
   .replaceAll('"', '&quot;')
-  .replaceAll("'", '&#39;')
-  .replace(/[\u0000-\u001f\u007f-\u009f\u202a-\u202e\u2066-\u2069]/gu,
-    (character) => `&#x${character.codePointAt(0).toString(16)};`);
+  .replaceAll("'", '&#39;');
 
 const validateInput = (input) => {
   if (input === null || typeof input !== 'object' || Array.isArray(input)) {

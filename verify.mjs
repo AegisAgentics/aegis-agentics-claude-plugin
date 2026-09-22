@@ -15,14 +15,31 @@ const EXPECTED_SKILLS = new Map([
   ['status', false],
   ['welcome_user', true],
 ]);
-const ENDPOINT_FIELDS = /["'](?:mcpServers|serverUrl|command|args)["']\s*:/i;
-const EXTERNAL_RESEARCH = /\b(?:WebSearch|public-web research)\b/i;
+const ENDPOINT_FIELDS = /(?:^|[\n{,])\s*(?:["'](?:mcpServers|serverUrl|command|args)["']|(?:mcpServers|serverUrl|command|args))\s*:/im;
+const EXTERNAL_RESEARCH_ACTION = /\b(?:use|call|run|perform|conduct|search|browse|look up)\b[^\n]{0,60}\b(?:public[- ]?web|web|internet|online|WebSearch|browser_search|search_web)\b/i;
+const EXTERNAL_RESEARCH_NEGATION = /\b(?:do not|don't|never|no|without|must not|cannot|can't)\b[^\n]{0,80}\b(?:public[- ]?web|web|internet|online|WebSearch|browser_search|search_web)\b/i;
 const ALLOWED_VIEWER_ORIGIN = 'https://app.aegisagentics.com';
+const ALLOWED_VIEWER_ORIGIN_FILE = `${PLUGIN_ROOT}/skills/knowledge-search/SKILL.md`;
 
 const toPosix = (path) => path.split(sep).join('/');
 const add = (errors, condition, message) => {
   if (!condition) errors.push(message);
 };
+const containsProhibitedConfigKey = (value) => {
+  if (value === null || typeof value !== 'object') return false;
+  if (Array.isArray(value)) return value.some(containsProhibitedConfigKey);
+  return Object.entries(value).some(([key, nested]) => (
+    /^(?:mcpServers|serverUrl|command|args)$/i.test(key) || containsProhibitedConfigKey(nested)
+  ));
+};
+const containsProhibitedUrl = (file, text) => {
+  const urls = text.match(/https?:\/\/[^\s)<>{}"'`]+/gi) ?? [];
+  return urls.some((url) => !(file === ALLOWED_VIEWER_ORIGIN_FILE && url === ALLOWED_VIEWER_ORIGIN));
+};
+const containsExternalResearchInstruction = (text) => text
+  .replace(/browser\.search/gi, 'browser_search')
+  .split(/[\n.!?;]+/)
+  .some((clause) => EXTERNAL_RESEARCH_ACTION.test(clause) && !EXTERNAL_RESEARCH_NEGATION.test(clause));
 
 export function parseFrontmatter(text) {
   const normalized = text.replaceAll('\r\n', '\n');
@@ -164,11 +181,18 @@ export function validateRepository(root = REPOSITORY_ROOT) {
     } catch {
       continue;
     }
-    const withoutApprovedViewerOrigin = text.replaceAll(ALLOWED_VIEWER_ORIGIN, '');
-    if (/https?:\/\//i.test(withoutApprovedViewerOrigin) || ENDPOINT_FIELDS.test(text)) {
+    let prohibitedJsonConfig = false;
+    if (file.endsWith('.json')) {
+      try {
+        prohibitedJsonConfig = containsProhibitedConfigKey(JSON.parse(text));
+      } catch {
+        prohibitedJsonConfig = false;
+      }
+    }
+    if (containsProhibitedUrl(file, text) || ENDPOINT_FIELDS.test(text) || prohibitedJsonConfig) {
       errors.push(`${file}: contains prohibited connector configuration`);
     }
-    if (file.startsWith(skillPrefix) && EXTERNAL_RESEARCH.test(text)) {
+    if (file.startsWith(skillPrefix) && containsExternalResearchInstruction(text)) {
       errors.push(`${file}: contains external research instruction`);
     }
   }

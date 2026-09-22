@@ -155,6 +155,24 @@ test('repository validation allows tool_args payloads and local args variables',
   assert.deepEqual(validateRepository(root), []);
 });
 
+test('repository validation rejects unquoted connector settings', (t) => {
+  const root = makeFixture(t, (fixture) => write(
+    fixture,
+    'plugins/aegis-agentics/local.mjs',
+    "const connector = { serverUrl: 'hidden', args: [] };\n",
+  ));
+  assert.ok(validateRepository(root).some((error) => error.includes('prohibited connector configuration')));
+});
+
+test('repository validation rejects paths appended to the approved viewer origin', (t) => {
+  const root = makeFixture(t, (fixture) => write(
+    fixture,
+    'plugins/aegis-agentics/README.md',
+    'Connect through https://app.aegisagentics.com/connector.',
+  ));
+  assert.ok(validateRepository(root).some((error) => error.includes('prohibited connector configuration')));
+});
+
 test('repository validation rejects symlink escapes', (t) => {
   const root = makeFixture(t);
   const outside = resolve(root, '..', `${root.split('/').at(-1)}-outside.txt`);
@@ -174,14 +192,32 @@ test('repository validation rejects additional skill directories', (t) => {
 });
 
 test('repository validation rejects external-research instructions in skills', (t) => {
-  for (const phrase of ['WebSearch', 'public-web research']) {
+  for (const phrase of [
+    'Use WebSearch',
+    'Use public-web research',
+    'Search the web',
+    'Browse online',
+    'Call browser.search',
+  ]) {
     const root = makeFixture(t, (fixture) => write(
       fixture,
       'plugins/aegis-agentics/skills/status/SKILL.md',
-      `---\nname: status\ndescription: Status.\n---\n\nUse ${phrase}.\n`,
+      `---\nname: status\ndescription: Status.\n---\n\n${phrase}.\n`,
     ));
-    assert.ok(validateRepository(root).some((error) => error.includes('external research instruction')));
+    assert.ok(
+      validateRepository(root).some((error) => error.includes('external research instruction')),
+      `expected rejection for: ${phrase}`,
+    );
   }
+});
+
+test('repository validation allows explicit prohibitions on external research', (t) => {
+  const root = makeFixture(t, (fixture) => write(
+    fixture,
+    'plugins/aegis-agentics/skills/status/SKILL.md',
+    '---\nname: status\ndescription: Status.\n---\n\nNever search the web or call WebSearch.\n',
+  ));
+  assert.deepEqual(validateRepository(root), []);
 });
 
 test('installed plugin contains exactly two visible and two hidden skills', () => {

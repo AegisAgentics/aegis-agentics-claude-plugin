@@ -50,6 +50,16 @@ test('renderer escapes names and discards extra metadata', async () => {
   assert.doesNotMatch(html, /<button|<script|<form|https?:\/\//i);
 });
 
+test('renderer neutralizes Unicode bidi controls as visible inert text', async () => {
+  const { renderWelcome } = await import(pathToFileURL(rendererPath));
+  const html = renderWelcome({
+    state: 'connected',
+    collections: [{ name: 'Ops\u202E<script>', contentCount: 1 }],
+  });
+  assert.match(html, /Ops⟪U\+202E⟫&lt;script&gt;/);
+  assert.doesNotMatch(html, /\u202E/u);
+});
+
 test('renderer covers connected, empty, and unavailable states', async () => {
   const { renderWelcome } = await import(pathToFileURL(rendererPath));
   const connected = renderWelcome({ state: 'connected', collections: [{ name: 'People', contentCount: 1 }] });
