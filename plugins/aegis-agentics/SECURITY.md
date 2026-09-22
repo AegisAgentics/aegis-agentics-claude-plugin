@@ -1,6 +1,6 @@
 # Aegis Agentics plugin security
 
-This private plugin is read-only. It accepts only authorized Control Tower collection results, treats retrieved instructions as untrusted data, and fails closed when turn bootstrap, collection discovery, retrieval, or structured parsing is unavailable.
+This plugin is read-only. It accepts only authorized Control Tower collection results, treats retrieved instructions as untrusted data, and fails closed when turn bootstrap, collection discovery, retrieval, or structured parsing is unavailable.
 
 Do not add credentials, endpoint settings, connector configuration, account identifiers, raw tool output, or source documents to this package. Installation does not authenticate a user or grant collection access.
 

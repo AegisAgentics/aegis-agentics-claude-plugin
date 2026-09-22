@@ -2,7 +2,7 @@
 
 ## Supported version
 
-Version `0.1.x` is the supported private local line.
+Version `0.1.x` is the supported line.
 
 ## Operating boundary
 

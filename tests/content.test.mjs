@@ -20,12 +20,32 @@ test('interaction policy preserves one conversation session and fresh turn token
   assert.match(text, /never execute an all-collections knowledge search/i);
 });
 
-test('interaction policy parses structured results and fails closed', () => {
+test('interaction policy parses each gateway result at its documented level and fails closed', () => {
   const text = skill('interaction-reference');
-  assert.match(text, /read `structuredContent` first/i);
-  assert.match(text, /JSON compatibility fallback/i);
+  assert.match(text, /`begin_turn` tool result[^\n]*`structuredContent` directly/i);
+  assert.match(text, /`welcome_user\.result\.structuredContent`/i);
+  assert.match(text, /`execute_tool\.result\.structuredContent`/i);
+  assert.match(text, /compatibility fallback only when `result\.structuredContent` is absent/i);
   assert.match(text, /never scrape prose/i);
   assert.match(text, /malformed.*fail closed/is);
+  assert.match(text, /temporary local file[^\n]*large[^\n]*MCP tool result/i);
+});
+
+test('interaction policy validates begin_turn before any downstream call', () => {
+  const text = skill('interaction-reference');
+  assert.match(text, /non-empty `sessionId` and `turnToken`/i);
+  assert.match(text, /`Tool completed successfully\.`[^\n]*not[^\n]*payload/i);
+  assert.match(text, /if `structuredContent` is absent[^\n]*treat `begin_turn` as unavailable/i);
+  assert.match(text, /do not parse `content\[\]\.text` for `begin_turn`/i);
+  assert.match(text, /do not call `welcome_user` or `execute_tool`/i);
+});
+
+test('explicit source exclusion bypasses the gateway without consuming the welcome', () => {
+  const text = skill('interaction-reference');
+  assert.match(text, /explicitly excludes Aegis Agentics or internal context/i);
+  assert.match(text, /do not call `begin_turn`/i);
+  assert.match(text, /do not run or mark the first-request welcome bootstrap as complete/i);
+  assert.match(text, /next eligible Aegis Agentics request/i);
 });
 
 test('interaction policy reuses authorization and selects one collection', () => {
@@ -47,28 +67,28 @@ test('interaction policy forbids discovery, providers, writes, and raw mechanics
 });
 
 test('status uses only turn bootstrap and direct collection listing', () => {
-  const text = skill('status');
-  assert.match(text, /only permitted operations are `begin_turn` and direct `context-hub\.queryCollections`/i);
+  const text = skill('aegis-status');
+  assert.match(text, /only permitted gateway operations[^\n]*`begin_turn`[^\n]*`welcome_user`[^\n]*`context-hub\.queryCollections`/i);
   assert.match(text, /reuse the collection list already obtained for the welcome bootstrap/i);
   assert.match(text, /do not call `queryCollections` again/i);
 });
 
 test('status distinguishes returned, empty, and unavailable states', () => {
-  const text = skill('status');
+  const text = skill('aegis-status');
   assert.match(text, /\*\*Available knowledge\*\*/);
   assert.match(text, /No knowledge collections are currently available to you\./);
   assert.match(text, /Your knowledge collections could not be loaded right now\./);
 });
 
 test('status isolates a named scope from the unfiltered first-request bootstrap', () => {
-  const text = skill('status');
-  assert.match(text, /first-request bootstrap is unfiltered/i);
-  assert.match(text, /report only authorized matches for that name/i);
+  const text = skill('aegis-status');
+  assert.match(text, /unfiltered first-request welcome bootstrap[^\n]*only exception/i);
+  assert.match(text, /report only (?:the )?matching authorized collection/i);
   assert.match(text, /never expose unrelated collection names/i);
 });
 
 test('status reports only human-readable collection metadata', () => {
-  const text = skill('status');
+  const text = skill('aegis-status');
   assert.match(text, /human-readable collection name/i);
   assert.match(text, /directly reported content count/i);
   assert.match(text, /never include raw IDs, session data, turn tokens, trace data, or raw JSON/i);
@@ -76,7 +96,7 @@ test('status reports only human-readable collection metadata', () => {
 });
 
 test('knowledge search routes content, facts, and mixed questions', () => {
-  const text = skill('knowledge-search');
+  const text = skill('aegis-knowledge-search');
   assert.match(text, /source passages.*`context-hub\.queryContent`/is);
   assert.match(text, /relationships.*`context-hub\.queryFacts`/is);
   assert.match(text, /needs both.*execute both/is);
@@ -84,14 +104,18 @@ test('knowledge search routes content, facts, and mixed questions', () => {
 });
 
 test('knowledge gateway shapes keep collection scope inside tool arguments', () => {
-  const text = skill('knowledge-search');
+  const text = skill('aegis-knowledge-search');
   assert.match(text, /"tool_name": "queryContent"[\s\S]*"tool_args": \{ "query": "<complete user request>", "collectionId": "<selected collection ID>" \}[\s\S]*"session_id": "<current session ID>"[\s\S]*"turnToken": "<current turn token>"/);
   assert.match(text, /"tool_name": "queryFacts"[\s\S]*"tool_args": \{ "query": "<concise fact-focused query>", "collectionId": "<selected collection ID>" \}[\s\S]*"session_id": "<current session ID>"[\s\S]*"turnToken": "<current turn token>"/);
   assert.match(text, /never place `session_id` or `turnToken` inside `tool_args`/i);
+  assert.match(text, /copy the exact `id` from the selected entry[^\n]*whether[^\n]*`welcome_user\.result\.structuredContent`[^\n]*`queryCollections`/i);
+  assert.match(text, /do not call `queryCollections` merely to obtain an ID[^\n]*reusable[^\n]*list already contains it/i);
+  assert.match(text, /required inner keys are exactly `query` and `collectionId`/i);
+  assert.match(text, /do not substitute `collection`, `collection_id`, `collectionIds`, a collection name, or a list/i);
 });
 
 test('knowledge grounding preserves names and temporal meaning without gap filling', () => {
-  const text = skill('knowledge-search');
+  const text = skill('aegis-knowledge-search');
   assert.match(text, /preserve proper names exactly as returned/i);
   assert.match(text, /preserve temporal language/i);
   assert.match(text, /do not fill gaps with model knowledge/i);
@@ -100,7 +124,7 @@ test('knowledge grounding preserves names and temporal meaning without gap filli
 });
 
 test('knowledge grounding handles quotations, staleness, conflicts, and inference', () => {
-  const text = skill('knowledge-search');
+  const text = skill('aegis-knowledge-search');
   assert.match(text, /exact quotation.*preserve the returned wording/is);
   assert.match(text, /stale.*state the evidence date limitation/is);
   assert.match(text, /conflict.*present the conflict.*citations/is);
@@ -108,7 +132,7 @@ test('knowledge grounding handles quotations, staleness, conflicts, and inferenc
 });
 
 test('citation contract preserves exact returned destinations', () => {
-  const text = skill('knowledge-search');
+  const text = skill('aegis-knowledge-search');
   assert.match(text, /assign citation numbers in order of first use/i);
   assert.match(text, /reuse the same number for an exact repeated reference/i);
   assert.match(text, /different numbers for distinct locators/i);
@@ -118,7 +142,7 @@ test('citation contract preserves exact returned destinations', () => {
 });
 
 test('citation contract omits references that have no usable destination', () => {
-  const text = skill('knowledge-search');
+  const text = skill('aegis-knowledge-search');
   assert.match(text, /numeric citation.*only.*`\[n\]\(URL\)`/i);
   assert.match(text, /never render.*bare numeric citation marker.*`\[1\]`.*`\[1\]\[2\]`/is);
   assert.match(text, /no usable viewer destination.*omit the citation entirely/is);
@@ -129,23 +153,21 @@ test('citation contract omits references that have no usable destination', () =>
 });
 
 test('knowledge no-evidence responses stay narrow and do not prompt generically', () => {
-  const text = skill('knowledge-search');
+  const text = skill('aegis-knowledge-search');
   assert.match(text, /Supporting information was not found in the authorized knowledge available to you\./);
   assert.match(text, /No matching authorized relationship or fact data is available\./);
   assert.match(text, /do not add a generic follow-up prompt/i);
 });
 
-test('only knowledge-search and status are user-invocable', () => {
+test('only aegis-knowledge-search and aegis-status are user-invocable', () => {
   const visibility = Object.fromEntries([
     'interaction-reference',
-    'knowledge-search',
-    'status',
-    'welcome_user',
+    'aegis-knowledge-search',
+    'aegis-status',
   ].map((name) => [name, parseFrontmatter(skill(name)).attributes['user-invocable'] !== 'false']));
   assert.deepEqual(visibility, {
     'interaction-reference': false,
-    'knowledge-search': true,
-    status: true,
-    welcome_user: false,
+    'aegis-knowledge-search': true,
+    'aegis-status': true,
   });
 });

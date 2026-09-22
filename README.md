@@ -2,16 +2,16 @@
 
 Aegis Agentics answers general organizational-knowledge questions from the Control Tower collections a user is authorized to access. Answers are strictly grounded in returned evidence, use claim-level citations when a viewer destination is available, and remain read-only.
 
-This is a private local package. It is not published, deployed, or registered with an external marketplace.
+This public repository contains a local Claude plugin package. It is not published to an external plugin marketplace.
 
 ## Skills
 
 The plugin exposes exactly two user-invocable skills:
 
-- `/aegis-agentics:knowledge-search` — answer document, fact, relationship, policy, meeting, chronology, quotation, and synthesis questions from one selected authorized collection.
-- `/aegis-agentics:status` — list the authorized knowledge collections and directly reported content counts available to the user.
+- `/aegis-agentics:aegis-knowledge-search` — answer document, fact, relationship, policy, meeting, chronology, quotation, and synthesis questions from one selected authorized collection.
+- `/aegis-agentics:aegis-status` — list the authorized knowledge collections and directly reported content counts available to the user.
 
-Two support skills are hidden. `interaction-reference` is hidden and not a command; it enforces turn, authorization, collection, citation, and safety rules. `welcome_user` is hidden and not a command; it renders the one-time first-request welcome and immediately returns control to the active skill.
+`interaction-reference` is hidden and not a command; it enforces turn, authorization, collection, citation, and safety rules. On the first eligible request, it calls the connector's dedicated read-only `welcome_user` operation once. The connected service presents its MCP App welcome component automatically and returns the authorized collection list for reuse. The plugin does not create an Artifact or package a welcome renderer.
 
 ## Boundaries
 
@@ -47,7 +47,7 @@ For a temporary clean-room session without marketplace installation:
 claude --plugin-dir ./plugins/aegis-agentics
 ```
 
-After installation, run `/aegis-agentics:status` to verify that the plugin can see the collections already authorized through the connector. Do not diagnose an empty authorized result as an installation failure.
+After installation, run `/aegis-agentics:aegis-status` to verify that the plugin can see the collections already authorized through the connector. Do not diagnose an empty authorized result as an installation failure.
 
 ## Update locally
 

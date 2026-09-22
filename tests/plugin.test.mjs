@@ -64,9 +64,8 @@ const makeFixture = (t, mutate = () => {}) => {
   }));
   for (const [name, hidden] of [
     ['interaction-reference', true],
-    ['knowledge-search', false],
-    ['status', false],
-    ['welcome_user', true],
+    ['aegis-knowledge-search', false],
+    ['aegis-status', false],
   ]) {
     const visibility = hidden ? 'user-invocable: false\n' : '';
     write(root, `plugins/aegis-agentics/skills/${name}/SKILL.md`,
@@ -125,7 +124,7 @@ test('path containment rejects paths outside the repository', () => {
   assert.throws(() => assertPathWithin('/safe/root', '/safe/outside'), /outside repository/i);
 });
 
-test('repository validation accepts the minimal four-skill contract', (t) => {
+test('repository validation accepts the minimal three-skill contract', (t) => {
   assert.deepEqual(validateRepository(makeFixture(t)), []);
 });
 
@@ -147,8 +146,8 @@ test('repository validation allows tool_args payloads and local args variables',
   const root = makeFixture(t, (fixture) => {
     write(
       fixture,
-      'plugins/aegis-agentics/skills/status/SKILL.md',
-      '---\nname: status\ndescription: Status.\n---\n\nUse `{ "tool_args": {} }`.\n',
+      'plugins/aegis-agentics/skills/aegis-status/SKILL.md',
+      '---\nname: aegis-status\ndescription: Status.\n---\n\nUse `{ "tool_args": {} }`.\n',
     );
     write(fixture, 'plugins/aegis-agentics/local.mjs', 'const args = process.argv.slice(2);\n');
   });
@@ -201,8 +200,8 @@ test('repository validation rejects external-research instructions in skills', (
   ]) {
     const root = makeFixture(t, (fixture) => write(
       fixture,
-      'plugins/aegis-agentics/skills/status/SKILL.md',
-      `---\nname: status\ndescription: Status.\n---\n\n${phrase}.\n`,
+      'plugins/aegis-agentics/skills/aegis-status/SKILL.md',
+      `---\nname: aegis-status\ndescription: Status.\n---\n\n${phrase}.\n`,
     ));
     assert.ok(
       validateRepository(root).some((error) => error.includes('external research instruction')),
@@ -214,30 +213,28 @@ test('repository validation rejects external-research instructions in skills', (
 test('repository validation allows explicit prohibitions on external research', (t) => {
   const root = makeFixture(t, (fixture) => write(
     fixture,
-    'plugins/aegis-agentics/skills/status/SKILL.md',
-    '---\nname: status\ndescription: Status.\n---\n\nNever search the web or call WebSearch.\n',
+    'plugins/aegis-agentics/skills/aegis-status/SKILL.md',
+    '---\nname: aegis-status\ndescription: Status.\n---\n\nNever search the web or call WebSearch.\n',
   ));
   assert.deepEqual(validateRepository(root), []);
 });
 
-test('installed plugin contains exactly two visible and two hidden skills', () => {
+test('installed plugin contains exactly two visible skills and one hidden policy skill', () => {
   const skillFiles = walkFiles(pluginRoot)
     .filter((file) => file.startsWith('skills/') && file.endsWith('/SKILL.md'));
   assert.deepEqual(skillFiles, [
+    'skills/aegis-knowledge-search/SKILL.md',
+    'skills/aegis-status/SKILL.md',
     'skills/interaction-reference/SKILL.md',
-    'skills/knowledge-search/SKILL.md',
-    'skills/status/SKILL.md',
-    'skills/welcome_user/SKILL.md',
   ]);
   const metadata = Object.fromEntries(skillFiles.map((file) => {
     const parsed = parseFrontmatter(readFileSync(resolve(pluginRoot, file), 'utf8'));
     return [parsed.attributes.name, parsed.attributes['user-invocable']];
   }));
   assert.deepEqual(metadata, {
+    'aegis-knowledge-search': undefined,
+    'aegis-status': undefined,
     'interaction-reference': 'false',
-    'knowledge-search': undefined,
-    status: undefined,
-    welcome_user: 'false',
   });
 });
 
@@ -252,16 +249,18 @@ test('documentation describes capability, authorization, and local lifecycle', (
   const pluginReadme = readFileSync(resolve(pluginRoot, 'README.md'), 'utf8');
   const combined = `${rootReadme}\n${pluginReadme}`;
   assert.match(combined, /exactly two user-invocable skills/i);
-  assert.match(combined, /`\/aegis-agentics:knowledge-search`/);
-  assert.match(combined, /`\/aegis-agentics:status`/);
+  assert.match(combined, /`\/aegis-agentics:aegis-knowledge-search`/);
+  assert.match(combined, /`\/aegis-agentics:aegis-status`/);
   assert.match(combined, /`interaction-reference`.*hidden.*not a command/is);
-  assert.match(combined, /`welcome_user`.*hidden.*not a command/is);
+  assert.match(combined, /dedicated read-only `welcome_user`/i);
+  assert.match(combined, /connected service.*welcome component/is);
+  assert.match(combined, /does not (?:create|construct) an Artifact/i);
   assert.match(combined, /authorization.*Control Tower connector/is);
   assert.match(combined, /installation does not authenticate/i);
   assert.match(combined, /claude plugin install aegis-agentics@aegis-agentics --scope user/);
   assert.match(combined, /claude plugin update aegis-agentics@aegis-agentics/);
   assert.match(combined, /claude plugin uninstall aegis-agentics@aegis-agentics --scope user/);
-  assert.match(combined, /`\/aegis-agentics:status`.*verify/is);
+  assert.match(combined, /`\/aegis-agentics:aegis-status`.*verify/is);
   assert.match(combined, /no external web research/i);
   assert.match(combined, /strictly grounded in returned evidence/i);
 });

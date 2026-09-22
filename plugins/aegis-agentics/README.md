@@ -6,10 +6,10 @@ Aegis Agentics provides evidence-grounded answers from the organizational knowle
 
 The plugin has exactly two user-invocable skills:
 
-- `/aegis-agentics:knowledge-search` answers document, fact, relationship, policy, meeting, chronology, quotation, and synthesis questions with inline citations.
-- `/aegis-agentics:status` lists authorized collection names and directly reported content counts.
+- `/aegis-agentics:aegis-knowledge-search` answers document, fact, relationship, policy, meeting, chronology, quotation, and synthesis questions with inline citations.
+- `/aegis-agentics:aegis-status` lists authorized collection names and directly reported content counts.
 
-`interaction-reference` is hidden and not a command; it provides the shared turn, scope, citation, and safety policy. `welcome_user` is hidden and not a command; it presents the welcome once and continues the original request automatically.
+`interaction-reference` is hidden and not a command; it provides the shared turn, scope, citation, and safety policy. On the first eligible request it calls the dedicated read-only `welcome_user` connector operation once. The connected service presents the welcome component automatically, and the original request continues without a Claude Artifact or local renderer.
 
 ## Authorization and grounding
 
@@ -26,7 +26,7 @@ claude plugin marketplace add .
 claude plugin install aegis-agentics@aegis-agentics --scope user
 ```
 
-Run `/aegis-agentics:status` after installation to verify authorized availability. To update or remove the local entry:
+Run `/aegis-agentics:aegis-status` after installation to verify authorized availability. To update or remove the local entry:
 
 ```bash
 claude plugin update aegis-agentics@aegis-agentics

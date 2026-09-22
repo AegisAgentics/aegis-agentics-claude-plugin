@@ -10,16 +10,15 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 const REPOSITORY_ROOT = dirname(fileURLToPath(import.meta.url));
 const PLUGIN_ROOT = 'plugins/aegis-agentics';
 const EXPECTED_SKILLS = new Map([
+  ['aegis-knowledge-search', false],
+  ['aegis-status', false],
   ['interaction-reference', true],
-  ['knowledge-search', false],
-  ['status', false],
-  ['welcome_user', true],
 ]);
 const ENDPOINT_FIELDS = /(?:^|[\n{,])\s*(?:["'](?:mcpServers|serverUrl|command|args)["']|(?:mcpServers|serverUrl|command|args))\s*:/im;
 const EXTERNAL_RESEARCH_ACTION = /\b(?:use|call|run|perform|conduct|search|browse|look up)\b[^\n]{0,60}\b(?:public[- ]?web|web|internet|online|WebSearch|browser_search|search_web)\b/i;
 const EXTERNAL_RESEARCH_NEGATION = /\b(?:do not|don't|never|no|without|must not|cannot|can't)\b[^\n]{0,80}\b(?:public[- ]?web|web|internet|online|WebSearch|browser_search|search_web)\b/i;
 const ALLOWED_VIEWER_ORIGIN = 'https://app.aegisagentics.com';
-const ALLOWED_VIEWER_ORIGIN_FILE = `${PLUGIN_ROOT}/skills/knowledge-search/SKILL.md`;
+const ALLOWED_VIEWER_ORIGIN_FILE = `${PLUGIN_ROOT}/skills/aegis-knowledge-search/SKILL.md`;
 
 const toPosix = (path) => path.split(sep).join('/');
 const add = (errors, condition, message) => {

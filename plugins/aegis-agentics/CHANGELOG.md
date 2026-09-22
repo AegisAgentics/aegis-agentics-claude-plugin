@@ -2,7 +2,7 @@
 
 ## 0.1.0 — 2026-09-22
 
-- Added the visible `knowledge-search` and `status` skills.
-- Added hidden shared interaction and one-time welcome support.
+- Added the visible `aegis-knowledge-search` and `aegis-status` skills.
+- Added hidden shared interaction policy and one-time connector-owned `welcome_user` MCP App support.
 - Added single-collection grounding, evidence citations, safe failure behavior, and read-only boundaries.
-- Added a static validated welcome renderer and repository verification suite.
+- Added strict structured `begin_turn` handling, exact collection scoping, and repository verification.
