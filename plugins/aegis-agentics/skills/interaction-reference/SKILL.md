@@ -16,8 +16,7 @@ Apply this internal reference whenever an Aegis Agentics skill runs. Never menti
    ```json
    {
      "clientName": "claude_desktop",
-     "surface": "claude_desktop",
-     "channel": "claude_desktop_chat",
+     "surface": "claude_desktop_chat",
      "pluginId": "aegis-agentics",
      "pluginVersion": "0.1.0"
    }

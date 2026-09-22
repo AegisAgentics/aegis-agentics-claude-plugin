@@ -13,8 +13,8 @@ test('interaction policy preserves one conversation session and fresh turn token
   assert.match(text, /recover the most recent valid `sessionId`/i);
   assert.match(text, /call `begin_turn` once per eligible user request/i);
   assert.match(text, /never decode, edit, print, persist, or reuse/i);
-  assert.match(text, /"surface": "claude_desktop"/i);
-  assert.match(text, /"channel": "claude_desktop_chat"/i);
+  assert.match(text, /"surface": "claude_desktop_chat"/i);
+  assert.doesNotMatch(text, /"channel"\s*:/i);
   assert.match(text, /"pluginId": "aegis-agentics"/i);
   assert.match(text, /"pluginVersion": "0\.1\.0"/i);
   assert.match(text, /never execute an all-collections knowledge search/i);
