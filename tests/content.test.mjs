@@ -115,7 +115,17 @@ test('citation contract preserves exact returned destinations', () => {
   assert.match(text, /copy `viewerUrl` exactly, character for character/i);
   assert.match(text, /do not construct a viewer path from IDs/i);
   assert.match(text, /prefix that unchanged path once with `https:\/\/app\.aegisagentics\.com`/i);
-  assert.match(text, /human-readable label without inventing a link/i);
+});
+
+test('citation contract omits references that have no usable destination', () => {
+  const text = skill('knowledge-search');
+  assert.match(text, /numeric citation.*only.*`\[n\]\(URL\)`/i);
+  assert.match(text, /never render.*bare numeric citation marker.*`\[1\]`.*`\[1\]\[2\]`/is);
+  assert.match(text, /no usable viewer destination.*omit the citation entirely/is);
+  assert.match(text, /do not append.*source label.*locator.*fallback text/is);
+  assert.match(text, /before sending.*verify.*numeric citation.*Markdown link.*omit.*without a usable destination/is);
+  assert.doesNotMatch(text, /link unavailable/i);
+  assert.doesNotMatch(text, /cite the returned human-readable label without inventing a link/i);
 });
 
 test('knowledge no-evidence responses stay narrow and do not prompt generically', () => {
