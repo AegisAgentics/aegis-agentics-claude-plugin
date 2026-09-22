@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.1 — 2026-09-22
+
+- Fixed successful `begin_turn` calls being mistaken for missing responses when Claude Desktop renders only the generic success summary.
+
 ## 0.2.0 — 2026-09-22
 
 - Renamed the visible commands to `aegis-knowledge-search` and `aegis-status`.

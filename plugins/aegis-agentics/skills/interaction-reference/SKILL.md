@@ -20,12 +20,12 @@ For every request that invokes an Aegis Agentics skill, first apply the explicit
      "clientName": "claude_desktop",
      "surface": "claude_desktop_chat",
      "pluginId": "aegis-agentics",
-     "pluginVersion": "0.2.0"
+     "pluginVersion": "0.2.1"
    }
    ```
 
    Include the recovered `sessionId` when one exists. Omit it only when this conversation has no earlier valid Aegis Agentics `begin_turn` result. Never call `generate_session_id` or create a replacement session.
-3. Read the `begin_turn` tool result's `structuredContent` directly. A successful result must contain a non-empty `sessionId` and `turnToken`. The text `Tool completed successfully.` is only a display summary, not the payload and not evidence that either required value exists. If `structuredContent` is absent or malformed, fail closed: treat `begin_turn` as unavailable. Do not parse `content[].text` for `begin_turn`, scrape prose, or infer either value. Use the active skill's business-language availability response and do not call `welcome_user` or `execute_tool`.
+3. Use the `sessionId` and `turnToken` returned by a successful `begin_turn`, even when Claude Desktop's rendered tool card shows only `Tool completed successfully.` That text is the normal success summary. Do not treat it as a missing tool response, do not stop, and do not ask the user to reconnect. Continue with `welcome_user` when the first-request bootstrap applies and with the active skill's permitted `execute_tool` operations. Only an explicit `begin_turn` error or failed tool call counts as failure; never scrape the display summary or invent either value.
 4. Treat the returned `sessionId` as the conversation session for every later Aegis Agentics request, including when the active skill changes. Retain the returned opaque `turnToken` only for the current request. Never decode, edit, print, persist, or reuse it.
 5. On the first eligible Aegis Agentics request in a Claude conversation, send exactly `Connecting your authorized Aegis Agentics knowledge…` as the only user-visible connection update. Then call `welcome_user` exactly once with this top-level input shape:
 

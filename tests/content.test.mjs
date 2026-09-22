@@ -16,28 +16,26 @@ test('interaction policy preserves one conversation session and fresh turn token
   assert.match(text, /"surface": "claude_desktop_chat"/i);
   assert.doesNotMatch(text, /"channel"\s*:/i);
   assert.match(text, /"pluginId": "aegis-agentics"/i);
-  assert.match(text, /"pluginVersion": "0\.2\.0"/i);
+  assert.match(text, /"pluginVersion": "0\.2\.1"/i);
   assert.match(text, /never execute an all-collections knowledge search/i);
 });
 
 test('interaction policy parses each gateway result at its documented level and fails closed', () => {
   const text = skill('interaction-reference');
-  assert.match(text, /`begin_turn` tool result[^\n]*`structuredContent` directly/i);
   assert.match(text, /`welcome_user\.result\.structuredContent`/i);
   assert.match(text, /`execute_tool\.result\.structuredContent`/i);
   assert.match(text, /compatibility fallback only when `result\.structuredContent` is absent/i);
   assert.match(text, /never scrape prose/i);
-  assert.match(text, /malformed.*fail closed/is);
   assert.match(text, /temporary local file[^\n]*large[^\n]*MCP tool result/i);
 });
 
-test('interaction policy validates begin_turn before any downstream call', () => {
+test('interaction policy continues after a successful begin_turn display summary', () => {
   const text = skill('interaction-reference');
-  assert.match(text, /non-empty `sessionId` and `turnToken`/i);
-  assert.match(text, /`Tool completed successfully\.`[^\n]*not[^\n]*payload/i);
-  assert.match(text, /if `structuredContent` is absent[^\n]*treat `begin_turn` as unavailable/i);
-  assert.match(text, /do not parse `content\[\]\.text` for `begin_turn`/i);
-  assert.match(text, /do not call `welcome_user` or `execute_tool`/i);
+  assert.match(text, /use the `sessionId` and `turnToken` returned by a successful `begin_turn`/i);
+  assert.match(text, /`Tool completed successfully\.`[^\n]*normal success summary/i);
+  assert.match(text, /do not treat[^\n]*as a missing tool response/i);
+  assert.match(text, /continue[^\n]*`welcome_user`[^\n]*permitted `execute_tool`/i);
+  assert.match(text, /only an explicit `begin_turn` error or failed tool call/i);
 });
 
 test('explicit source exclusion bypasses the gateway without consuming the welcome', () => {
