@@ -3,7 +3,9 @@
   "owner": {
     "name": "Aegis Agentics"
   },
-  "description": "Aegis Agentics local plugins for governed organizational knowledge.",
+  "metadata": {
+    "description": "Aegis Agentics local plugins for governed organizational knowledge."
+  },
   "plugins": [
     {
       "name": "aegis-agentics",

@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import {
   mkdirSync,
   mkdtempSync,
+  readFileSync,
   rmSync,
   symlinkSync,
   writeFileSync,
@@ -20,6 +21,7 @@ import {
 } from '../verify.mjs';
 
 const repositoryRoot = resolve(import.meta.dirname, '..');
+const pluginRoot = resolve(repositoryRoot, 'plugins/aegis-agentics');
 
 const write = (root, relativePath, contents) => {
   const path = resolve(root, relativePath);
@@ -42,7 +44,7 @@ const makeFixture = (t, mutate = () => {}) => {
   write(root, '.claude-plugin/marketplace.json', JSON.stringify({
     name: 'aegis-agentics',
     owner: { name: 'Aegis Agentics' },
-    description: 'Aegis Agentics local plugins.',
+    metadata: { description: 'Aegis Agentics local plugins.' },
     plugins: [{
       name: 'aegis-agentics',
       description: 'Evidence-grounded answers from authorized organizational knowledge.',
@@ -53,7 +55,6 @@ const makeFixture = (t, mutate = () => {}) => {
   }));
   write(root, 'plugins/aegis-agentics/.claude-plugin/plugin.json', JSON.stringify({
     name: 'aegis-agentics',
-    displayName: 'Aegis Agentics',
     version: '0.1.0',
     description: 'Evidence-grounded answers from authorized organizational knowledge.',
     author: { name: 'Aegis Agentics' },
@@ -93,10 +94,16 @@ test('package and plugin identities are stable', () => {
   assert.equal(pkg.name, 'aegis-agentics-claude-plugin');
   assert.equal(pkg.engines.node, '>=22');
   assert.equal(plugin.name, 'aegis-agentics');
-  assert.equal(plugin.displayName, 'Aegis Agentics');
+  assert.equal('displayName' in plugin, false);
   assert.equal(plugin.version, pkg.version);
   assert.equal(marketplace.plugins[0].version, pkg.version);
   assert.equal(marketplace.plugins[0].source, './plugins/aegis-agentics');
+});
+
+test('marketplace root uses only Claude-supported metadata keys', () => {
+  const marketplace = readJson(resolve(repositoryRoot, '.claude-plugin/marketplace.json'));
+  assert.deepEqual(Object.keys(marketplace).sort(), ['metadata', 'name', 'owner', 'plugins']);
+  assert.equal(marketplace.metadata.description, 'Aegis Agentics local plugins for governed organizational knowledge.');
 });
 
 test('frontmatter parser returns scalar metadata and body', () => {
@@ -175,4 +182,62 @@ test('repository validation rejects external-research instructions in skills', (
     ));
     assert.ok(validateRepository(root).some((error) => error.includes('external research instruction')));
   }
+});
+
+test('installed plugin contains exactly two visible and two hidden skills', () => {
+  const skillFiles = walkFiles(pluginRoot)
+    .filter((file) => file.startsWith('skills/') && file.endsWith('/SKILL.md'));
+  assert.deepEqual(skillFiles, [
+    'skills/interaction-reference/SKILL.md',
+    'skills/knowledge-search/SKILL.md',
+    'skills/status/SKILL.md',
+    'skills/welcome_user/SKILL.md',
+  ]);
+  const metadata = Object.fromEntries(skillFiles.map((file) => {
+    const parsed = parseFrontmatter(readFileSync(resolve(pluginRoot, file), 'utf8'));
+    return [parsed.attributes.name, parsed.attributes['user-invocable']];
+  }));
+  assert.deepEqual(metadata, {
+    'interaction-reference': 'false',
+    'knowledge-search': undefined,
+    status: undefined,
+    welcome_user: 'false',
+  });
+});
+
+test('documentation describes capability, authorization, and local lifecycle', () => {
+  const rootReadme = readFileSync(resolve(repositoryRoot, 'README.md'), 'utf8');
+  const pluginReadme = readFileSync(resolve(pluginRoot, 'README.md'), 'utf8');
+  const combined = `${rootReadme}\n${pluginReadme}`;
+  assert.match(combined, /exactly two user-invocable skills/i);
+  assert.match(combined, /`\/aegis-agentics:knowledge-search`/);
+  assert.match(combined, /`\/aegis-agentics:status`/);
+  assert.match(combined, /`interaction-reference`.*hidden.*not a command/is);
+  assert.match(combined, /`welcome_user`.*hidden.*not a command/is);
+  assert.match(combined, /authorization.*Control Tower connector/is);
+  assert.match(combined, /installation does not authenticate/i);
+  assert.match(combined, /claude plugin install aegis-agentics@aegis-agentics --scope user/);
+  assert.match(combined, /claude plugin update aegis-agentics@aegis-agentics/);
+  assert.match(combined, /claude plugin uninstall aegis-agentics@aegis-agentics --scope user/);
+  assert.match(combined, /`\/aegis-agentics:status`.*verify/is);
+  assert.match(combined, /no external web research/i);
+  assert.match(combined, /strictly grounded in returned evidence/i);
+});
+
+test('package prose states boundaries without secrets, endpoints, raw links, or unfinished markers', () => {
+  const prosePaths = [
+    'README.md',
+    'SECURITY.md',
+    'LICENSE',
+    'plugins/aegis-agentics/README.md',
+    'plugins/aegis-agentics/SECURITY.md',
+    'plugins/aegis-agentics/CHANGELOG.md',
+  ];
+  const prose = prosePaths.map((path) => readFileSync(resolve(repositoryRoot, path), 'utf8')).join('\n');
+  assert.doesNotMatch(prose, /\b(?:FMCAP|investor|portfolio|Carta|PitchBook)\b/i);
+  assert.doesNotMatch(prose, /\b(?:TODO|FIXME|TBD|XXX)\b/);
+  assert.doesNotMatch(prose, /https?:\/\//i);
+  assert.doesNotMatch(prose, /-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/i);
+  assert.doesNotMatch(prose, /\b(?:gh[pousr]_[A-Za-z0-9]{20,}|AKIA[A-Z0-9]{16}|xox[baprs]-[A-Za-z0-9-]{20,})\b/);
+  assert.match(prose, /contains no MCP server, endpoint settings, credentials, hooks, external research, or write operations/i);
 });

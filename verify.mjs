@@ -119,7 +119,7 @@ export function validateRepository(root = REPOSITORY_ROOT) {
   add(errors, pkg.name === 'aegis-agentics-claude-plugin', 'package.json: unexpected package name');
   add(errors, pkg.engines?.node === '>=22', 'package.json: Node engine must be >=22');
   add(errors, plugin.name === 'aegis-agentics', 'plugin.json: unexpected plugin name');
-  add(errors, plugin.displayName === 'Aegis Agentics', 'plugin.json: unexpected display name');
+  add(errors, !('displayName' in plugin), 'plugin.json: displayName is not supported by the Claude manifest schema');
   add(errors, plugin.skills === './skills/', 'plugin.json: skills path must be ./skills/');
   add(errors, plugin.version === pkg.version, 'plugin.json: version differs from package.json');
   add(errors, marketplace.plugins?.length === 1, 'marketplace.json: expected one local plugin');

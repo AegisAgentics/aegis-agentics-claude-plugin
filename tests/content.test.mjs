@@ -3,6 +3,8 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import test from 'node:test';
 
+import { parseFrontmatter } from '../verify.mjs';
+
 const pluginRoot = resolve(import.meta.dirname, '../plugins/aegis-agentics');
 const skill = (name) => readFileSync(resolve(pluginRoot, `skills/${name}/SKILL.md`), 'utf8');
 
@@ -121,4 +123,19 @@ test('knowledge no-evidence responses stay narrow and do not prompt generically'
   assert.match(text, /Supporting information was not found in the authorized knowledge available to you\./);
   assert.match(text, /No matching authorized relationship or fact data is available\./);
   assert.match(text, /do not add a generic follow-up prompt/i);
+});
+
+test('only knowledge-search and status are user-invocable', () => {
+  const visibility = Object.fromEntries([
+    'interaction-reference',
+    'knowledge-search',
+    'status',
+    'welcome_user',
+  ].map((name) => [name, parseFrontmatter(skill(name)).attributes['user-invocable'] !== 'false']));
+  assert.deepEqual(visibility, {
+    'interaction-reference': false,
+    'knowledge-search': true,
+    status: true,
+    welcome_user: false,
+  });
 });
