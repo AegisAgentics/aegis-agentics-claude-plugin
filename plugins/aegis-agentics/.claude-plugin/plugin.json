@@ -1,0 +1,17 @@
+{
+  "name": "aegis-agentics",
+  "displayName": "Aegis Agentics",
+  "version": "0.1.0",
+  "description": "Evidence-grounded answers from authorized organizational knowledge.",
+  "author": {
+    "name": "Aegis Agentics"
+  },
+  "license": "UNLICENSED",
+  "keywords": [
+    "knowledge",
+    "citations",
+    "governed-data",
+    "organizational-intelligence"
+  ],
+  "skills": "./skills/"
+}

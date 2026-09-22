@@ -1,0 +1,14 @@
+{
+  "name": "aegis-agentics-claude-plugin",
+  "version": "0.1.0",
+  "private": true,
+  "license": "UNLICENSED",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node --test",
+    "verify": "node verify.mjs"
+  }
+}
