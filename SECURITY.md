@@ -2,7 +2,7 @@
 
 ## Supported version
 
-Version `0.1.x` is the supported line.
+Version `0.2.x` is the supported line.
 
 ## Operating boundary
 

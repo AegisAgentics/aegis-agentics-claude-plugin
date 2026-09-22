@@ -20,7 +20,7 @@ For every request that invokes an Aegis Agentics skill, first apply the explicit
      "clientName": "claude_desktop",
      "surface": "claude_desktop_chat",
      "pluginId": "aegis-agentics",
-     "pluginVersion": "0.1.0"
+     "pluginVersion": "0.2.0"
    }
    ```
 
