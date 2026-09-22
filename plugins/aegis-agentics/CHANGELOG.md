@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.2 — 2026-09-23
+
+- Added one bounded `begin_turn` retry when a successful result genuinely lacks a usable session or turn value.
+- Prevented the normal Claude Desktop success summary from triggering retries, waits, or tool rediscovery.
+
 ## 0.2.1 — 2026-09-22
 
 - Fixed successful `begin_turn` calls being mistaken for missing responses when Claude Desktop renders only the generic success summary.

@@ -11,12 +11,12 @@ const skill = (name) => readFileSync(resolve(pluginRoot, `skills/${name}/SKILL.m
 test('interaction policy preserves one conversation session and fresh turn tokens', () => {
   const text = skill('interaction-reference');
   assert.match(text, /recover the most recent valid `sessionId`/i);
-  assert.match(text, /call `begin_turn` once per eligible user request/i);
+  assert.match(text, /make the initial `begin_turn` call once per eligible user request/i);
   assert.match(text, /never decode, edit, print, persist, or reuse/i);
   assert.match(text, /"surface": "claude_desktop_chat"/i);
   assert.doesNotMatch(text, /"channel"\s*:/i);
   assert.match(text, /"pluginId": "aegis-agentics"/i);
-  assert.match(text, /"pluginVersion": "0\.2\.1"/i);
+  assert.match(text, /"pluginVersion": "0\.2\.2"/i);
   assert.match(text, /never execute an all-collections knowledge search/i);
 });
 
@@ -36,6 +36,27 @@ test('interaction policy continues after a successful begin_turn display summary
   assert.match(text, /do not treat[^\n]*as a missing tool response/i);
   assert.match(text, /continue[^\n]*`welcome_user`[^\n]*permitted `execute_tool`/i);
   assert.match(text, /only an explicit `begin_turn` error or failed tool call/i);
+});
+
+test('interaction policy retries a genuinely incomplete begin_turn result only once', () => {
+  const text = skill('interaction-reference');
+  assert.match(text, /usable `sessionId` and `turnToken`[^\n]*non-empty opaque strings/i);
+  assert.match(text, /if a successful `begin_turn` result genuinely lacks either a usable `sessionId` or `turnToken`/i);
+  assert.match(text, /retry `begin_turn` exactly once[^\n]*at most two total attempts/i);
+  assert.match(text, /success summary alone must never trigger this retry/i);
+  assert.match(text, /if the first result contains a usable `sessionId`[^\n]*include it in the retry/i);
+  assert.match(text, /otherwise include the recovered conversation `sessionId` when one existed/i);
+  assert.match(text, /explicit `begin_turn` error or failed tool call fails immediately[^\n]*do not retry/i);
+  assert.match(text, /do not use Bash, `sleep`, polling, delayed waiting, or tool rediscovery/i);
+  assert.match(text, /if the retry still lacks either value[^\n]*do not call `welcome_user` or `execute_tool`/i);
+});
+
+test('visible skills defer begin_turn attempt limits to the shared interaction policy', () => {
+  for (const name of ['aegis-status', 'aegis-knowledge-search']) {
+    const text = skill(name);
+    assert.match(text, /`begin_turn` under the attempt limits in `interaction-reference`/i);
+    assert.doesNotMatch(text, /one `begin_turn`/i);
+  }
 });
 
 test('explicit source exclusion bypasses the gateway without consuming the welcome', () => {

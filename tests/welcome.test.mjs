@@ -29,6 +29,7 @@ test('successful begin_turn display summary does not block the welcome bootstrap
   assert.match(interaction, /`Tool completed successfully\.`[^\n]*normal success summary/i);
   assert.match(interaction, /do not treat[^\n]*as a missing tool response/i);
   assert.match(interaction, /continue[^\n]*`welcome_user`/i);
+  assert.match(interaction, /success summary alone must never trigger this retry/i);
 });
 
 test('a begin_turn failure never fabricates a welcome component', () => {

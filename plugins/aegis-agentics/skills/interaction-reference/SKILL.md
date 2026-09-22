@@ -13,19 +13,21 @@ Apply this internal reference whenever an Aegis Agentics skill runs. Never menti
 For every request that invokes an Aegis Agentics skill, first apply the explicit source-isolation exception below. Otherwise:
 
 1. Before every `begin_turn`, recover the most recent valid `sessionId` returned by an earlier Aegis Agentics `begin_turn` in this same Claude conversation. Do not substitute a prior turn token, tool-call ID, run ID, trace ID, or session-like text.
-2. Call `begin_turn` once per eligible user request with the complete current request as `userIntent` and this exact `clientAttribution`:
+2. Make the initial `begin_turn` call once per eligible user request with the complete current request as `userIntent` and this exact `clientAttribution`:
 
    ```json
    {
      "clientName": "claude_desktop",
      "surface": "claude_desktop_chat",
      "pluginId": "aegis-agentics",
-     "pluginVersion": "0.2.1"
+     "pluginVersion": "0.2.2"
    }
    ```
 
    Include the recovered `sessionId` when one exists. Omit it only when this conversation has no earlier valid Aegis Agentics `begin_turn` result. Never call `generate_session_id` or create a replacement session.
-3. Use the `sessionId` and `turnToken` returned by a successful `begin_turn`, even when Claude Desktop's rendered tool card shows only `Tool completed successfully.` That text is the normal success summary. Do not treat it as a missing tool response, do not stop, and do not ask the user to reconnect. Continue with `welcome_user` when the first-request bootstrap applies and with the active skill's permitted `execute_tool` operations. Only an explicit `begin_turn` error or failed tool call counts as failure; never scrape the display summary or invent either value.
+3. Use the `sessionId` and `turnToken` returned by a successful `begin_turn`, even when Claude Desktop's rendered tool card shows only `Tool completed successfully.` That text is the normal success summary. Do not treat it as a missing tool response, do not stop, and do not ask the user to reconnect. Continue with `welcome_user` when the first-request bootstrap applies and with the active skill's permitted `execute_tool` operations. Usable `sessionId` and `turnToken` values are non-empty opaque strings. Only an explicit `begin_turn` error or failed tool call fails immediately; do not retry it, scrape the display summary, or invent either value.
+
+   If a successful `begin_turn` result genuinely lacks either a usable `sessionId` or `turnToken` in the actual tool result, retry `begin_turn` exactly once, for at most two total attempts. The success summary alone must never trigger this retry. Repeat the same `userIntent` and `clientAttribution`. If the first result contains a usable `sessionId`, include it in the retry; otherwise include the recovered conversation `sessionId` when one existed. Do not use Bash, `sleep`, polling, delayed waiting, or tool rediscovery. If the retry still lacks either value, use the active skill's business-language availability response and do not call `welcome_user` or `execute_tool`.
 4. Treat the returned `sessionId` as the conversation session for every later Aegis Agentics request, including when the active skill changes. Retain the returned opaque `turnToken` only for the current request. Never decode, edit, print, persist, or reuse it.
 5. On the first eligible Aegis Agentics request in a Claude conversation, send exactly `Connecting your authorized Aegis Agentics knowledge…` as the only user-visible connection update. Then call `welcome_user` exactly once with this top-level input shape:
 
