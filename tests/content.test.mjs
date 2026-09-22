@@ -16,7 +16,7 @@ test('interaction policy preserves one conversation session and fresh turn token
   assert.match(text, /"surface": "claude_desktop_chat"/i);
   assert.doesNotMatch(text, /"channel"\s*:/i);
   assert.match(text, /"pluginId": "aegis-agentics"/i);
-  assert.match(text, /"pluginVersion": "0\.2\.2"/i);
+  assert.match(text, /"pluginVersion": "0\.2\.3"/i);
   assert.match(text, /never execute an all-collections knowledge search/i);
 });
 
@@ -169,6 +169,14 @@ test('citation contract omits references that have no usable destination', () =>
   assert.match(text, /before sending.*verify.*numeric citation.*Markdown link.*omit.*without a usable destination/is);
   assert.doesNotMatch(text, /link unavailable/i);
   assert.doesNotMatch(text, /cite the returned human-readable label without inventing a link/i);
+});
+
+test('citation contract separates multiple links so their numbers cannot merge', () => {
+  const text = skill('aegis-knowledge-search');
+  assert.match(text, /when one claim has multiple citations[^\n]*comma followed by a space/i);
+  assert.match(text, /`\[1\]\(URL\), \[2\]\(URL\), \[6\]\(URL\)`/i);
+  assert.match(text, /never place numeric citation links directly adjacent[^\n]*`\[1\]\(URL\)\[2\]\(URL\)`/i);
+  assert.match(text, /before sending[^\n]*no two numeric citation links are directly adjacent/i);
 });
 
 test('knowledge no-evidence responses stay narrow and do not prompt generically', () => {

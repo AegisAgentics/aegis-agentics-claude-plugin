@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.3 — 2026-09-23
+
+- Separated consecutive citation links with commas so their numeric labels cannot merge in Claude Desktop.
+- Preserved exact viewer destinations and omission of references without usable destinations.
+
 ## 0.2.2 — 2026-09-23
 
 - Added one bounded `begin_turn` retry when a successful result genuinely lacks a usable session or turn value.
