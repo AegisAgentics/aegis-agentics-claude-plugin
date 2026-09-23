@@ -20,7 +20,7 @@ For every request that invokes an Aegis Agentics skill, first apply the explicit
      "clientName": "claude_desktop",
      "surface": "claude_desktop_chat",
      "pluginId": "aegis-agentics",
-     "pluginVersion": "0.2.4"
+     "pluginVersion": "0.2.5"
    }
    ```
 
@@ -42,7 +42,7 @@ For every request that invokes an Aegis Agentics skill, first apply the explicit
    Call it with the same top-level `session_id` and returned `turnToken`. Do not place these values inside `tool_args`, and do not call `execute_tool` for `context-hub.queryCollections` during that bootstrap. The connected service's MCP App presents the returned user and authorized-knowledge summary automatically. Do not create a Claude Artifact, run a local renderer, or produce a text substitute for the component. Continue the original request automatically and reuse the returned authorized collection list for scope resolution and status. If `welcome_user` fails or its governed result is unavailable, no welcome component is shown; use the active skill's applicable availability response.
 6. On later Aegis Agentics requests, reuse an authorized collection list already returned in this conversation when applicable. Later Aegis Agentics requests must not repeat the first-request welcome bootstrap, even when the active skill changes.
 7. Call only the direct `execute_tool` operations allowed by the active skill. Send the current `session_id` and `turnToken` unchanged at the top level; never place either inside `tool_args`.
-8. Read `welcome_user.result.structuredContent` for the welcome bootstrap. For `begin_turn` and every non-welcome gateway call used by these skills, parse the JSON object from `result.content[].text`; do not expect protocol-level `structuredContent`. For `execute_tool`, read capability data from the parsed object's nested `result.structuredContent`. Accept only valid JSON matching the expected response schema. Never scrape prose or infer fields. If Claude uses a temporary local file for a large successful MCP tool result, read and parse that file completely using bounded chunks. That file is transport for an already-authorized result, not a source connector or user file.
+8. Read `welcome_user.result.structuredContent` for the welcome bootstrap. For `begin_turn` and every non-welcome gateway call used by these skills, parse the JSON object from `result.content[].text`; do not expect protocol-level `structuredContent`. For `execute_tool`, read capability data directly from the parsed object's `result`. Accept only valid JSON matching the expected response schema. Never scrape prose or infer fields. If Claude uses a temporary local file for a large successful MCP tool result, read and parse that file completely using bounded chunks. That file is transport for an already-authorized result, not a source connector or user file.
 9. When two permitted retrieval routes are independent, execute them in parallel with the same `turnToken`.
 10. Format only the business answer. Never expose IDs, tokens, raw results, or gateway mechanics.
 

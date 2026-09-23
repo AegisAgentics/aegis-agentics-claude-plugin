@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.5 — 2026-09-23
+
+- Read `execute_tool` capability data directly from the parsed JSON result while preserving the structured `welcome_user` MCP App response.
+
 ## 0.2.4 — 2026-09-23
 
 - Read `begin_turn` and `execute_tool` envelopes from their JSON text content while preserving the structured `welcome_user` MCP App response.

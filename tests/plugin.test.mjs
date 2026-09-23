@@ -34,7 +34,7 @@ const makeFixture = (t, mutate = () => {}) => {
   t.after(() => rmSync(root, { recursive: true, force: true }));
   write(root, 'package.json', JSON.stringify({
     name: 'aegis-agentics-claude-plugin',
-    version: '0.2.4',
+    version: '0.2.5',
     private: true,
     license: 'UNLICENSED',
     type: 'module',
@@ -48,14 +48,14 @@ const makeFixture = (t, mutate = () => {}) => {
     plugins: [{
       name: 'aegis-agentics',
       description: 'Evidence-grounded answers from authorized organizational knowledge.',
-      version: '0.2.4',
+      version: '0.2.5',
       source: './plugins/aegis-agentics',
       category: 'productivity',
     }],
   }));
   write(root, 'plugins/aegis-agentics/.claude-plugin/plugin.json', JSON.stringify({
     name: 'aegis-agentics',
-    version: '0.2.4',
+    version: '0.2.5',
     description: 'Evidence-grounded answers from authorized organizational knowledge.',
     author: { name: 'Aegis Agentics' },
     license: 'UNLICENSED',
@@ -91,7 +91,7 @@ test('package and plugin identities are stable', () => {
   const plugin = readJson(resolve(repositoryRoot, 'plugins/aegis-agentics/.claude-plugin/plugin.json'));
   const marketplace = readJson(resolve(repositoryRoot, '.claude-plugin/marketplace.json'));
   assert.equal(pkg.name, 'aegis-agentics-claude-plugin');
-  assert.equal(pkg.version, '0.2.4');
+  assert.equal(pkg.version, '0.2.5');
   assert.equal(pkg.engines.node, '>=22');
   assert.equal(plugin.name, 'aegis-agentics');
   assert.equal('displayName' in plugin, false);

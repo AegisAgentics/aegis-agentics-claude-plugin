@@ -10,7 +10,7 @@
     {
       "name": "aegis-agentics",
       "description": "Evidence-grounded answers from authorized organizational knowledge.",
-      "version": "0.2.4",
+      "version": "0.2.5",
       "source": "./plugins/aegis-agentics",
       "category": "productivity"
     }

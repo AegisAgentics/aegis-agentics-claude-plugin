@@ -16,7 +16,7 @@ test('interaction policy preserves one conversation session and fresh turn token
   assert.match(text, /"surface": "claude_desktop_chat"/i);
   assert.doesNotMatch(text, /"channel"\s*:/i);
   assert.match(text, /"pluginId": "aegis-agentics"/i);
-  assert.match(text, /"pluginVersion": "0\.2\.4"/i);
+  assert.match(text, /"pluginVersion": "0\.2\.5"/i);
   assert.match(text, /never execute an all-collections knowledge search/i);
 });
 
@@ -25,7 +25,8 @@ test('interaction policy parses each gateway result at its documented level and 
   assert.match(text, /`welcome_user\.result\.structuredContent`/i);
   assert.match(text, /For `begin_turn` and every non-welcome gateway call used by these skills, parse the JSON object from `result\.content\[\]\.text`/i);
   assert.match(text, /Read `sessionId` and `turnToken` from that parsed `begin_turn` object/i);
-  assert.match(text, /For `execute_tool`, read capability data from the parsed object's nested `result\.structuredContent`/i);
+  assert.match(text, /For `execute_tool`, read capability data directly from the parsed object's `result`/i);
+  assert.doesNotMatch(text, /execute_tool[^\n]*result\.structuredContent/i);
   assert.doesNotMatch(text, /compatibility fallback/i);
   assert.match(text, /never scrape prose/i);
   assert.match(text, /temporary local file[^\n]*large[^\n]*MCP tool result/i);
