@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.4 — 2026-09-23
+
+- Read `begin_turn` and `execute_tool` envelopes from their JSON text content while preserving the structured `welcome_user` MCP App response.
+- Retained one bounded retry for malformed or incomplete successful `begin_turn` content without waiting or rediscovering tools.
+
 ## 0.2.3 — 2026-09-23
 
 - Separated consecutive citation links with commas so their numeric labels cannot merge in Claude Desktop.

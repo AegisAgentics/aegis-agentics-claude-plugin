@@ -23,13 +23,12 @@ test('shared interaction rules bootstrap the connector-owned MCP App once', () =
   assert.match(interaction, /later Aegis Agentics requests[^\n]*must not repeat[^\n]*bootstrap/i);
 });
 
-test('successful begin_turn display summary does not block the welcome bootstrap', () => {
+test('successful begin_turn JSON content drives the welcome bootstrap', () => {
   const interaction = readFileSync(interactionPath, 'utf8');
-  assert.match(interaction, /use the `sessionId` and `turnToken` returned by a successful `begin_turn`/i);
-  assert.match(interaction, /`Tool completed successfully\.`[^\n]*normal success summary/i);
-  assert.match(interaction, /do not treat[^\n]*as a missing tool response/i);
+  assert.match(interaction, /parse the JSON object from `begin_turn\.result\.content\[\]\.text`/i);
+  assert.match(interaction, /read `sessionId` and `turnToken` from that parsed `begin_turn` object/i);
   assert.match(interaction, /continue[^\n]*`welcome_user`/i);
-  assert.match(interaction, /success summary alone must never trigger this retry/i);
+  assert.doesNotMatch(interaction, /Tool completed successfully\./i);
 });
 
 test('a begin_turn failure never fabricates a welcome component', () => {
